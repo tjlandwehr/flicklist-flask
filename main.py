@@ -38,7 +38,25 @@ add_form = """
 
 # a form for crossing off watched movies
 crossoff_form = """
-
+    <form action="/crossoff" method="post">
+        <label for="crossed-off-movie">
+            I want to cross off
+            <select id="crossed-off-movie" name="crossed-off-movie">
+                <option value="The Godfather">The Godfather</option>
+                <option value="The Shawshank Redemption">The Shawshank Redemption</option>
+                <option value="Schindler's List">Schindler's List</option>
+                <option value="Raging Bull">Raging Bull</option>
+                <option value="Casablanca">Casablanca</option>
+                <option value="Citizen Kane">Citizen Kane</option>
+                <option value="Gone with the Wind">Gone with the Wind</option>
+                <option value="The Wizard of Oz">The Wizard of Oz</option>
+                <option value="One Flew Over the Cuckoo's Nest">One Flew Over the Cuckoo's Nest</option>
+                <option value="Lawrence of Arabia">Lawrence of Arabia</option>
+            </select>
+            from my Watchlist.
+        </label>
+        <input type="submit" value="Cross It Off" />
+    </form>
 """
 
 # TODO:
@@ -46,8 +64,16 @@ crossoff_form = """
 # "Star Wars has been crossed off your watchlist".
 # And create a route above the function definition to receive and handle the request from 
 # your crossoff_form.
+@app.route("/crossoff", methods=['POST'])
 def crossoff_movie():
-    crossed_off_movie = request.form['crossed-off-movie']    
+    crossed_off_movie = request.form['crossed-off-movie']
+
+    # build response content
+    crossed_off_movie_element = "<strike>" + crossed_off_movie + "</strike>"
+    sentence = crossed_off_movie_element + " has been crossed off your Watchlist."
+    content = page_header + "<p>" + sentence + "</p>" + page_footer
+
+    return content
 
 # TODO:
 # modify the crossoff_form above to use a dropdown (<select>) instead of
@@ -70,7 +96,7 @@ def index():
     edit_header = "<h2>Edit My Watchlist</h2>"
 
     # build the response string
-    content = page_header + edit_header + add_form + page_footer
+    content = page_header + edit_header + add_form + crossoff_form + page_footer
 
     return content
 
