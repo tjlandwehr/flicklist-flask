@@ -5,13 +5,10 @@ __pycache__/
 
 # VS Code
 .vscode/*
-<<<<<<< HEAD
-=======
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
->>>>>>> 799274571a8a2f5021ab05b5618d087017d7174f
 
 # C extensions
 *.so
