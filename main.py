@@ -81,4 +81,9 @@ def index():
     return content
 
 
+<<<<<<< HEAD
 app.run()
+=======
+app.run()
+
+>>>>>>> 727c84e7a0c2f19986fb7cd90ce560e0b0293c50
