@@ -1,4 +1,4 @@
-from flask import Flask, request, redirect
+from flask import Flask, request, redirect, render_template
 import cgi
 
 app = Flask(__name__)
@@ -21,39 +21,10 @@ page_footer = """
 """
 
 # a form for adding new movies
-add_form = """
-    <form action="/add" method="post">
-        <label>
-            I want to add
-            <input type="text" name="new-movie"/>
-            to my watchlist.
-        </label>
-        <input type="submit" value="Add It"/>
-    </form>
-"""
 
 def get_current_watchlist():
     # returns user's current watchlist--hard coded for now
     return [ "Star Wars", "Minions", "Freaky Friday", "My Favorite Martian" ]
-
-# a form for crossing off watched movies
-# (first we build a dropdown from the current watchlist items)
-crossoff_options = ""
-for movie in get_current_watchlist():
-    crossoff_options += '<option value="{0}">{0}</option>'.format(movie)
-
-crossoff_form = """
-    <form action="/crossoff" method="post">
-        <label>
-            I want to cross off
-            <select name="crossed-off-movie"/>
-                {0}
-            </select>
-            from my watchlist.
-        </label>
-        <input type="submit" value="Cross It Off"/>
-    </form>
-""".format(crossoff_options)
 
 # a list of movies that nobody should have to watch
 terrible_movies = [
@@ -100,37 +71,18 @@ def add_movie():
         error = "Trust me, you don't want to add '{0}' to your Watchlist".format(new_movie)
         return redirect("/?error=" + cgi.escape(error, quote=True))
 
-    # 'escape' the user's input so that if they typed HTML, it doesn't mess up our site
-    new_movie_escaped = cgi.escape(new_movie, quote=True)
-
-    # build response content
-    new_movie_element = "<strong>" + new_movie_escaped + "</strong>"
-    sentence = new_movie_element + " has been added to your Watchlist!"
-    content = page_header + "<p>" + sentence + "</p>" + page_footer
-
-    return content
+    return render_template('add_form_complete.html',new_movie=new_movie)
 
 
 @app.route("/")
 def index():
-    edit_header = "<h2>Edit My Watchlist</h2>"
-
     # if we have an error, make a <p> to display it
     error = request.args.get("error")
     if error:
         error_esc = cgi.escape(error, quote=True)
-        error_element = '<p class="error">' + error_esc + '</p>'
+        return render_template('add_form.html', error_msg=error_esc, crossoff_options=get_current_watchlist())
     else:
-        error_element = ''
-
-    # combine all the pieces to build the content of our response
-    main_content = edit_header + add_form + crossoff_form + error_element
-
-
-    # build the response string
-    content = page_header + main_content + page_footer
-
-    return content
+        return render_template('add_form.html', crossoff_options=get_current_watchlist())
 
 
 app.run()
