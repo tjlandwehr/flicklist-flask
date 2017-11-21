@@ -1,6 +1,14 @@
 {% extends "base.html" %}
 
 {% block content %}
+{% if watchlist: %}
+<h2>My Watchlist</h2>
+<ul>
+{% for movie in watchlist: %}
+    <li>{{ movie }}</li>
+{% endfor %}
+</ul>
+{% endif %}
 <h2>Edit My Watchlist</h2>
 
 <form action="/add" method="post">
@@ -11,7 +19,7 @@
     </label>
     <input type="submit" value="Add It"/>
 </form>
-
+{% if watchlist: %}
 <form action="/crossoff" method="post">
     <label>
         I want to cross off
@@ -25,6 +33,7 @@
     </label>
     <input type="submit" value="Cross It Off"/>
 </form>
+{% endif %}
 
 {% if error %}
   <p class='error'>{{ error }}</p>
