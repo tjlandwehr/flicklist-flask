@@ -35,10 +35,15 @@ def get_current_watchlist():
 
 # TODO: 
 # Add a function, movie_ratings, to handle a get request and render the template at "/ratings"
+@app.route("/ratings", methods=['GET'])
+def movie_ratings():
+    return render_template('ratings.html', watchlist=get_watched_movies())
 
 # TODO:
 # Add a function, get_watched_movies, to get the list of crossed off movies. 
-# For now, create a hard-coded list with a few movie titles. 
+# For now, create a hard-coded list with a few movie titles.
+def get_watched_movies():
+    return ["The Matrix", "The Princess Bride", "Buffy the Vampire Slayer"]
 
 # TODO:
 # Make a rating-confirmation.html template, to be displayed when the user rates a movie 
@@ -47,6 +52,12 @@ def get_current_watchlist():
 # TODO: 
 # create a rate_movie function that handles a post request on /rating-confirmation and 
 # renders the `rating-confirmation` template.
+@app.route("/rating-confirmation", methods=['POST'])
+def rate_movie():
+    rated_movie = request.form['rated-movie']
+    rating = request.form['rating']
+    # rating = request.form['']
+    return render_template('rating-confirmation.html', rated_movie=rated_movie, rating=rating)
 
 @app.route("/crossoff", methods=['POST'])
 def crossoff_movie():
