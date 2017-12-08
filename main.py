@@ -1,4 +1,4 @@
-from flask import Flask, request, redirect, render_template
+from flask import Flask, request, redirect, render_template, session, flash
 from flask_sqlalchemy import SQLAlchemy
 import cgi
 
@@ -8,6 +8,19 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://flicklist:MyNewPass@loc
 app.config['SQLALCHEMY_ECHO'] = True
 
 db = SQLAlchemy(app)
+
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(120), unique=True)
+    password = db.Column(db.String(120))
+
+    def __init__(self, email, password):
+        self.email = email
+        self.password = password
+
+    def __repr__(self):
+        return '<User %r>' % self.email
+
 
 class Movie(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -36,6 +49,44 @@ def get_current_watchlist():
 
 def get_watched_movies():
     return Movie.query.filter_by(watched=True).all()
+
+@app.route("/register", methods=['GET', 'POST'])
+def register():
+    print('doh')
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
+        if not is_email(email):
+            flash('zoiks! "' + email + '" does not seem like an email address')
+            return redirect('/register')
+
+        user = User(email=email, password=password)
+        db.session.add(user)
+        db.session.commit()
+        session['user'] = user.email
+        print("Test")
+        return redirect("/")
+    else:
+        return render_template('register.html')
+
+def is_email(string):
+    # for our purposes, an email string has an '@' followed by a '.'
+    # there is an embedded language called 'regular expression' that would crunch this implementation down
+    # to a one-liner, but we'll keep it simple:
+    atsign_index = string.find('@')
+    atsign_present = atsign_index >= 0
+    if not atsign_present:
+        return False
+    else:
+        domain_dot_index = string.find('.', atsign_index)
+        domain_dot_present = domain_dot_index >= 0
+        return domain_dot_present
+
+@app.route("/logout", methods=['POST'])
+def logout():
+    del session['user']
+    return redirect("/")
+
 
 # Create a new route called rate_movie which handles a POST request on /rating-confirmation
 @app.route("/rating-confirmation", methods=['POST'])
@@ -103,6 +154,20 @@ def add_movie():
 def index():
     encoded_error = request.args.get("error")
     return render_template('edit.html', watchlist=get_current_watchlist(), error=encoded_error and cgi.escape(encoded_error, quote=True))
+
+@app.before_request
+def require_login():
+    print('before request: ', request.endpoint)
+    if not ('user' in session or request.endpoint == 'register'):
+        print('what')
+        return redirect("/register")
+
+# In a real application, this should be kept secret (i.e. not on github)
+# As a consequence of this secret being public, I think connection snoopers or
+# rival movie sites' javascript could hijack our session and act as us,
+# perhaps giving movies bad ratings - the HORROR.
+app.secret_key = 'A0Zr98j/3yX R~XHH!jmN]LWX/,?RU'
+
 
 if __name__ == "__main__":
     app.run()
