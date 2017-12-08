@@ -20,6 +20,7 @@ class Movie(db.Model):
     def __init__(self, name):
         self.name = name
         self.watched = False
+        self.rating = ""
 
     def __repr__(self):
         return '<Movie %r>' % self.name
