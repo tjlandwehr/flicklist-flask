@@ -58,11 +58,18 @@ def register():
     if request.method == 'POST':
         email = request.form['email']
         password = request.form['password']
+        verify = request.form['verify']
         if not is_email(email):
             flash('zoiks! "' + email + '" does not seem like an email address')
             return redirect('/register')
         # TODO 1: validate that form value of 'verify' matches password
+        if password != verify:
+            flash('Passwords do not match.')
+            return redirect('/register')
         # TODO 2: validate that there is no user with that email already
+        if User.query.filter_by(email=email):
+            flash('That email address is already registered.')
+            return redirect('/register')
         user = User(email=email, password=password)
         db.session.add(user)
         db.session.commit()
