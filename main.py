@@ -52,6 +52,27 @@ def get_watched_movies():
 # TODO 3: Add "/login" GET and POST routes.
 # TODO 4: Create login template with username and password.
 #         Notice that we've already created a 'login' link in the upper-right corner of the page that'll connect to it.
+@app.route("/login", methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
+        user = User.query.filter_by(email=email).first()
+        if not is_email(email):
+            flash('zoiks! "' + email + '" does not seem like an email address')
+            return redirect('/login')
+        if not user:
+            flash('That email address has not been registered.')
+            return redirect('/login')
+        if user and user.password != password:
+            flash('Incorrect password')
+            return redirect('/login')
+        if user and user.password == password:
+            session['user'] = email
+            flash("Logged in")
+            print(session)
+            return redirect('/')
+    return render_template('login.html')
 
 @app.route("/register", methods=['GET', 'POST'])
 def register():
@@ -167,8 +188,10 @@ def index():
 #         It should contain 'register' and 'login'.
 @app.before_request
 def require_login():
-    if not ('user' in session or request.endpoint == 'register'):
-        return redirect("/register")
+    allowed_routes = ['login', 'register']
+    if request.endpoint not in allowed_routes and 'user' not in session:
+    # if not ('user' in session or request.endpoint in allowed_routes):
+        return redirect("/login")
 
 # In a real application, this should be kept secret (i.e. not on github)
 # As a consequence of this secret being public, I think connection snoopers or
