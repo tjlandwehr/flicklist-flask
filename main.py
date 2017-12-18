@@ -1,38 +1,8 @@
 from flask import Flask, request, redirect, render_template, session, flash
 from flask_sqlalchemy import SQLAlchemy
 import cgi
-
-app = Flask(__name__)
-app.config['DEBUG'] = True      # displays runtime errors in the browser, too
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://flicklist:MyNewPass@localhost:8889/flicklist'
-app.config['SQLALCHEMY_ECHO'] = True
-
-db = SQLAlchemy(app)
-
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(120), unique=True)
-    password = db.Column(db.String(120))
-    
-    def __init__(self, email, password):
-        self.email = email
-        self.password = password
-
-    def __repr__(self):
-        return '<User %r>' % self.email
-
-class Movie(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(120))
-    watched = db.Column(db.Boolean)
-    rating = db.Column(db.String(20))
-
-    def __init__(self, name):
-        self.name = name
-        self.watched = False
-
-    def __repr__(self):
-        return '<Movie %r>' % self.name
+from models import User, Movie
+from app import app, db
 
 # a list of movie names that nobody should have to watch
 terrible_movies = [
@@ -44,10 +14,12 @@ terrible_movies = [
 ]
 
 def get_current_watchlist():
-    return Movie.query.filter_by(watched=False).all()
+    owner = User.query.filter_by(email=session['user']).first()
+    return Movie.query.filter_by(owner=owner, watched=False).all()
 
 def get_watched_movies():
-    return Movie.query.filter_by(watched=True).all()
+    owner = User.query.filter_by(email=session['user']).first()
+    return Movie.query.filter_by(owner=owner, watched=True,).all()
 
 @app.route("/login", methods=['GET', 'POST'])
 def login():
@@ -153,6 +125,7 @@ def crossoff_movie():
 def add_movie():
     # look inside the request to figure out what the user typed
     new_movie_name = request.form['new-movie']
+    owner = User.query.filter_by(email=session['user']).first()
 
     # if the user typed nothing at all, redirect and tell them the error
     if (not new_movie_name) or (new_movie_name.strip() == ""):
@@ -164,7 +137,7 @@ def add_movie():
         error = "Trust me, you don't want to add '{0}' to your Watchlist".format(new_movie_name)
         return redirect("/?error=" + error)
 
-    movie = Movie(new_movie_name)
+    movie = Movie(new_movie_name, owner)
     db.session.add(movie)
     db.session.commit()
     return render_template('add-confirmation.html', movie=movie)
@@ -172,7 +145,8 @@ def add_movie():
 @app.route("/")
 def index():
     encoded_error = request.args.get("error")
-    return render_template('edit.html', watchlist=get_current_watchlist(), error=encoded_error and cgi.escape(encoded_error, quote=True))
+    if session['user']:
+        return render_template('edit.html', watchlist=get_current_watchlist(), error=encoded_error and cgi.escape(encoded_error, quote=True))
 
 
 endpoints_without_login = ['login', 'register']
